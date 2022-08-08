@@ -1,7 +1,7 @@
 const GameBoard = (function(){
     let board = [
-                 [null, null, null],
-                 [null, null, null],
+                 ["X", null, "X"],
+                 [null, "O", null],
                  [null, null, null]
                 ];
     const showBoard = () => console.log(board);
@@ -16,7 +16,19 @@ const GameController = (function(){
     function render(board){
         for(let i=0;i<3;i++){
             for(let j=0;j<3;j++){
+
                 const div = document.createElement('div');
+                
+
+                if (board[i][j] == "X"){
+                    const X = document.createElement('p')
+                    X.textContent = "X"
+                    div.appendChild(X)
+                } else if (board[i][j]=="O"){
+                    const O = document.createElement('p')
+                    O.textContent = "O"
+                    div.appendChild(O)
+                }
                 display.appendChild(div);
             }
         }
