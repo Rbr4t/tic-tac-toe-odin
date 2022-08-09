@@ -14,12 +14,13 @@ const GameBoard = (function(){
 
     // clears the board and resets the game
     const clear = () => {
-        
-        board = [
+        console.log("")
+        GameBoard.board = [
             [null, null, null],
             [null, null, null],
             [null, null, null]
-           ];
+        ];
+        
         const tiles = document.querySelectorAll('.tile');
 
         for(let i = 0; i<tiles.length; i++){
@@ -73,16 +74,172 @@ const GameBoard = (function(){
 
 
 // Player object
-const Player = (XO) => {
+const Player = (XO, type1) => {
+    const type = type1;
     const side = XO;
     const whichSide = () => console.log(XO);
-    return {whichSide, side}
+    return {whichSide, side, type}
 }
 
+function normalizeArrayForMiniMax(){
+    let newArr = [];
+    let index = 0;
+    // console.log(GameBoard.board)
+    for(let i=0; i<3; i++){
+        for(let j=0; j<3; j++){
+            if(GameBoard.board[i][j] !== null){
+                newArr.push(GameBoard.board[i][j])
+            } else {
+                newArr.push(index)
+            }
+            index += 1;
+        }
+    }
+    return newArr;
+}
+    
 
-// Initalizing players
-const player1 = Player("X")
-const player2 = Player("O")
+function mixmax(){
+    // code from FFC website which shows how to implement minimax algorithm on tic-tac-toe, 
+    // did some modifications in order to use this piece of code(normalizeArrayForMiniMax && index output), https://github.com/ahmadabdolsaheb/minimaxarticle/blob/master/index.js
+
+    // human
+    var huPlayer = "X";
+    // ai
+    var aiPlayer = "O";
+
+    // this is the board flattened and filled with some values to easier asses the Artificial Intelligence.
+    var origBoard = normalizeArrayForMiniMax();
+    // console.log(origBoard)
+    //keeps count of function calls
+    var fc = 0;
+
+    // finding the ultimate play on the game that favors the computer
+    var bestSpot = minimax(origBoard, aiPlayer);
+
+    //logging the results
+    // console.log("index: " + bestSpot.index);
+    // console.log("function calls: " + fc);
+
+    // the main minimax function
+    function minimax(newBoard, player){
+        //add one to function calls
+        fc++;
+        
+        //available spots
+        var availSpots = emptyIndexies(newBoard);
+
+        // checks for the terminal states such as win, lose, and tie and returning a value accordingly
+        if (winning(newBoard, huPlayer)){
+            return {score:-10};
+        }
+            else if (winning(newBoard, aiPlayer)){
+            return {score:10};
+            }
+        else if (availSpots.length === 0){
+            return {score:0};
+        }
+
+        // an array to collect all the objects
+        var moves = [];
+
+        // loop through available spots
+        for (var i = 0; i < availSpots.length; i++){
+            //create an object for each and store the index of that spot that was stored as a number in the object's index key
+            var move = {};
+            move.index = newBoard[availSpots[i]];
+
+            // set the empty spot to the current player
+            newBoard[availSpots[i]] = player;
+
+            //if collect the score resulted from calling minimax on the opponent of the current player
+            if (player == aiPlayer){
+            var result = minimax(newBoard, huPlayer);
+            move.score = result.score;
+            }
+            else{
+            var result = minimax(newBoard, aiPlayer);
+            move.score = result.score;
+            }
+
+            //reset the spot to empty
+            newBoard[availSpots[i]] = move.index;
+
+            // push the object to the array
+            moves.push(move);
+        }
+
+        // if it is the computer's turn loop over the moves and choose the move with the highest score
+        var bestMove;
+        if(player === aiPlayer){
+            var bestScore = -10000;
+            for(var i = 0; i < moves.length; i++){
+            if(moves[i].score > bestScore){
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+            }
+        }else{
+
+        // else loop over the moves and choose the move with the lowest score
+            var bestScore = 10000;
+            for(var i = 0; i < moves.length; i++){
+            if(moves[i].score < bestScore){
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+            }
+        }
+
+        // return the chosen move (object) from the array to the higher depth
+        
+        return moves[bestMove]
+        
+        
+    }
+
+    // returns the available spots on the board
+    function emptyIndexies(board){
+        return  board.filter(s => s != "O" && s != "X");
+    }
+
+    // winning combinations using the board indexies for instace the first win could be 3 xes in a row
+    function winning(board, player){
+    if (
+            (board[0] == player && board[1] == player && board[2] == player) ||
+            (board[3] == player && board[4] == player && board[5] == player) ||
+            (board[6] == player && board[7] == player && board[8] == player) ||
+            (board[0] == player && board[3] == player && board[6] == player) ||
+            (board[1] == player && board[4] == player && board[7] == player) ||
+            (board[2] == player && board[5] == player && board[8] == player) ||
+            (board[0] == player && board[4] == player && board[8] == player) ||
+            (board[2] == player && board[4] == player && board[6] == player)
+            ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    // console.log(bestSpot)
+    if(bestSpot.index>=6){
+            
+        return [2, bestSpot.index-6];
+    } else if(bestSpot.index>=3){
+        
+        return [1, bestSpot.index-3];
+
+    } else {
+        
+        return [0, bestSpot.index];
+    }
+    
+};
+
+
+
+// Initializing players
+const player1 = Player("X", 'human')
+const player2 = Player("O", 'bot')
 let activePlayer = player1;
 
 
@@ -105,6 +262,7 @@ const Game = (function(){
     };
 
     function renderNew(col, row){
+        // console.log([col, row])
         const id =  document.getElementById(String(col)+' '+String(row));
         const p = document.createElement('p');
         p.textContent =  activePlayer.side;
@@ -182,16 +340,23 @@ function playRound(e){
     let row = parseInt(Array(e.target.id.split(" "))[0][1])
 
     if(!isNaN(row) && Game.isRunning){
-
+          
         GameBoard.modify(activePlayer.side, col, row)
         Game.renderNew(col, row)
         Game.checkStatus()
+        activePlayer = player2;
+    if(Game.isRunning){
+        col = mixmax()[0];
+        row = mixmax()[1];
+        GameBoard.modify("O", col, row)
+        
+        Game.renderNew(col, row)
+        Game.checkStatus()
+        // GameBoard.showBoard()
+        activePlayer = player1;
+    }
+        
 
-        if (activePlayer === player1){
-            activePlayer = player2;
-        } else {
-            activePlayer = player1;
-        }
     } 
 };
 
