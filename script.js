@@ -1,5 +1,6 @@
-// Gameboard object
 'use strict'
+// Gameboard object
+
 const GameBoard = (function(){
     let board = [
                  [null, null, null],
@@ -36,21 +37,23 @@ const GameBoard = (function(){
         for(let i=0; i<board.length; i++) {
             let row = board[i];
             if (row[0] === row[1] && row[0] === row[2] && row[0] !== null){
-                return row[0]; 
+                return [row[0], i, 'row']; 
             } 
         };
 
         // Scenario no 2, columns
         for(let i=0; i<board.length; i++){
             if (board[0][i]===board[1][i] && board[0][i]===board[2][i] && board[0][i]!==null){
-                return board[0][i];
+                return [board[0][i], i, 'col'];
             }
         }
 
         // Scenario no 3, diagonals
-        if (board[1][1] === board[0][0] &&  board[0][0]=== board[2][2] || board[1][1]=== board[0][2] && board[0][2] === board[2][0]){
-            return board[1][1];
-        };
+        if (board[1][1] === board[0][0] &&  board[0][0]=== board[2][2] && board[1][1]!==null ){
+            return [board[0][0], 1, 'dia'];
+        } else if (board[1][1]=== board[0][2] && board[0][2] === board[2][0] && board[1][1]!==null){
+            return [board[0][2], -1, 'dia'];
+        }
 
         // Scenario no 4, draw
         let draw = []
@@ -60,8 +63,10 @@ const GameBoard = (function(){
             }
         });
         if (draw.length===3){
-            return 'draw';
+            return ['draw', null];
         };
+        
+        
     }
     return {showBoard, board, modify, CheckWin, clear}
 })();
@@ -106,25 +111,67 @@ const Game = (function(){
         id.appendChild(p);
     };
 
+    // coloring the diagonals, rows and columns if a winner in found out
+    function colorWin(){
+        let status = GameBoard.CheckWin();
+        const tiles = document.querySelectorAll('.tile');
+        
+        // rows
+        let i = null
+        if (status[2]==='row'){
+            i = status[1]===0?i=status[1]: status[1]===1?i=3: i=6;
+            let j = i+3
+            for(i ; i<j; i++){
+                tiles[i].classList.add('win')
+            }
+        
+        // columns
+        } else if(status[2]==='col') {
+            i = status[1]===0?i = [0, 3, 6]: status[1]===1?i = [1, 4, 7]: i = [2, 5, 8]
+            i.forEach(j => {
+                tiles[j].classList.add('win');
+            })
+        
+        // diagonals
+        } else if(status[2]==='dia'){
+            i = status[1]===1? i=[0, 4, 8]: i=[2, 4, 6];
+            i.forEach(j => {
+                tiles[j].classList.add('win');
+            })
+        }
+    };
+
+
     //check the current status of board and then give feedback if the game is over
     function checkStatus(){
         let status = GameBoard.CheckWin()
         
-        if (status === 'draw'){
-            console.log('Game over, its a draw!');
-            Game.isRunning = false;
 
-        } else if(status === player1.side) {
-            console.log('Game over, player1 won!');
-            Game.isRunning = false;
+        if (status === undefined){
+            
+        } else {
+            if (status[0] === 'draw'){
+                console.log('Game over, its a draw!');
+                Game.isRunning = false;
 
-        } else if(status === player2.side) {
-            console.log('Game over, player2 won!');
-            Game.isRunning = false;
-        };
-    }
+    
+            } else if(status[0] === player1.side) {
+                console.log('Game over, player1 won!');
+                Game.isRunning = false;
+    
+            } else if(status[0] === player2.side) {
+                console.log('Game over, player2 won!');
+                Game.isRunning = false;
+            };
+            if (!Game.isRunning){
+                Game.colorWin();
+            }
+        }
+    };
 
-    return {renderNew, renderBoard, checkStatus, isRunning}
+    
+
+    return {renderNew, renderBoard, checkStatus, isRunning, colorWin}
 })()
 
 Game.renderBoard()
@@ -137,20 +184,22 @@ function playRound(e){
     if(!isNaN(row) && Game.isRunning){
 
         GameBoard.modify(activePlayer.side, col, row)
-        Game.checkStatus()
         Game.renderNew(col, row)
+        Game.checkStatus()
 
         if (activePlayer === player1){
-            activePlayer = player2
+            activePlayer = player2;
         } else {
-            activePlayer = player1
+            activePlayer = player1;
         }
-    }
+    } 
 };
 
 // we get the divs what are clicked
 function loadTiles(){
     const tiles = document.querySelectorAll('.tile');
+    
+    
     tiles.forEach(tile=> {
         tile.addEventListener('click', e => playRound(e));
     })
