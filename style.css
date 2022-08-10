@@ -5,6 +5,9 @@ body{
     align-items: center;
    
 }
+button {
+    font-size: 30px;
+}
 .board{
     background-color: rgb(107, 50, 50);
     padding: 50px;
@@ -54,11 +57,53 @@ div>div>p{
     background-color: rgba(118, 184, 184, 0.75);
     position: absolute;
     top: 43.2%;
-    left: 45.3%;
+    left: 47.5%;
     z-index: 2;
 }
 
 .message {
     font-size: 25px;
     font-weight: bold;
+}
+
+.left {
+    padding-left: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 100px;
+}
+
+.upper {
+    display: flex;
+    flex-direction: column;
+    background-color: wheat;
+    align-items: flex-start;
+}
+
+.lower {
+    display: flex;
+    justify-content: center;
+    background-color: wheat;
+}
+.upper> p{
+    font-size: 45px;
+}
+.reset {
+    display: flex;
+    justify-self: center;
+    justify-content: center;
+    align-items: center;
+    width: 75%;
+    height: 30%;
+    
+    
+}
+.against {
+    padding: 5px;
+    height: 90%;
+}
+
+.m {
+    width: 100%;
+    font-size: 30px;
 }

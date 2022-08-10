@@ -248,15 +248,19 @@ function mixmax(){
 
 // Initializing players
 const option = document.querySelector('.against');
+const pl2 = document.querySelector('.info2')
 option.addEventListener('click', (e)=> {
     if(option.innerHTML === 'bot'){
         const player1 = Player("X", 'human')
         const player2 = Player("O", 'bot')
         option.textContent = 'human'
+        pl2.textContent = 'Player2 - O'
+        
     } else {
         const player1 = Player("X", 'human')
         const player2 = Player("O", 'human')
         option.textContent = 'bot'
+        pl2.textContent = 'Computer - O'
     }
     
 })
@@ -324,10 +328,11 @@ const Game = (function(){
 
     //check the current status of board and then give feedback if the game is over
     function checkStatus(){
+
         let status = GameBoard.CheckWin()
         const window = document.querySelector('.congrats');
         const message = document.querySelector('.message');
-        // console.log(status)
+        
         if (status === undefined){
             
         } else {
@@ -335,30 +340,24 @@ const Game = (function(){
             if (status[0] === 'draw'){
                 window.style.display = "block";
                 message.textContent = 'Game over, its a draw!'
-                console.log();
                 Game.isRunning = false;
                 Game.colorWin();
-
     
             } else if(status[0] === player1.side) {
                 window.style.display = "block";
                 message.textContent = 'Game over, player1 won!'
-                console.log();
                 Game.isRunning = false;
                 Game.colorWin();
     
             } else if(status[0] === player2.side) {
                 window.style.display = "block";
                 message.textContent = 'Game over, player2 won!'
-                console.log('Game over, player2 won!');
                 Game.isRunning = false;
                 Game.colorWin();
             };
             
         }
     };
-
-    
 
     return {renderNew, renderBoard, checkStatus, isRunning, colorWin}
 })()
