@@ -117,9 +117,6 @@ function mixmax(){
     
     // this is the board flattened and filled with some values to easier asses the Artificial Intelligence.
     let origBoard = normalizeArrayForMiniMax();
-    // console.log(normalizeArrayForMiniMax())
-    //keeps count of function calls
-    var fc = 0;
 
     // finding the ultimate play on the game that favors the computer
     var bestSpot = minimax(origBoard, aiPlayer);
@@ -131,8 +128,6 @@ function mixmax(){
 
     // the main minimax function
     function minimax(newBoard, player){
-        //add one to function calls
-        fc++;
         
         //available spots
         var availSpots = emptyIndexies(newBoard);
@@ -229,7 +224,7 @@ function mixmax(){
             return false;
         }
     }
-    // console.log(bestSpot)
+
     if(bestSpot.index>=6){
             
         return [2, bestSpot.index-6];
@@ -249,24 +244,27 @@ function mixmax(){
 // Initializing players
 const option = document.querySelector('.against');
 const pl2 = document.querySelector('.info2')
+let player1 = Player("X", 'human')
+let player2 = Player("O", 'bot')
+
 option.addEventListener('click', (e)=> {
     if(option.innerHTML === 'bot'){
-        const player1 = Player("X", 'human')
-        const player2 = Player("O", 'bot')
+        player1 = Player("X", 'human')
+        player2 = Player("O", 'human')
         option.textContent = 'human'
         pl2.textContent = 'Player2 - O'
-        
+
     } else {
-        const player1 = Player("X", 'human')
-        const player2 = Player("O", 'human')
+
+        player1 = Player("X", 'human')
+        player2 = Player("O", 'bot')
         option.textContent = 'bot'
         pl2.textContent = 'Computer - O'
     }
-    
-})
-const player1 = Player("X", 'human')
-const player2 = Player("O", 'bot')
+});
+
 let activePlayer = player1;
+
 
 
 // Game controller object
@@ -288,7 +286,6 @@ const Game = (function(){
     };
 
     function renderNew(col, row){
-        // console.log([col, row])
         const id =  document.getElementById(String(col)+' '+String(row));
         const p = document.createElement('p');
         p.textContent =  activePlayer.side;
@@ -299,7 +296,7 @@ const Game = (function(){
     function colorWin(){
         let status = GameBoard.CheckWin();
         const tiles = document.querySelectorAll('.tile');
-        // console.log(GameBoard.CheckWin())
+
         // rows
         let i = null
         if (status[2]==='row'){
@@ -351,7 +348,7 @@ const Game = (function(){
     
             } else if(status[0] === player2.side) {
                 window.style.display = "block";
-                message.textContent = 'Game over, player2 won!'
+                message.textContent = `Game over, ${player2.type} won!`
                 Game.isRunning = false;
                 Game.colorWin();
             };
@@ -369,22 +366,19 @@ function playRoundBot(e){
     let col = parseInt(Array(e.target.id.split(" "))[0][0])
     let row = parseInt(Array(e.target.id.split(" "))[0][1])
     
-    
     if(!isNaN(row) && Game.isRunning){
         activePlayer = player1
         GameBoard.modify(activePlayer.side, col, row)
         Game.renderNew(col, row)
         Game.checkStatus()
-        
         activePlayer = player2
+
     if(Game.isRunning){
         col = mixmax()[0];
         row = mixmax()[1];
         GameBoard.modify(activePlayer.side, col, row)
-        
         Game.renderNew(col, row)
         Game.checkStatus()
-        
         activePlayer = player1;
         } 
     }
@@ -403,8 +397,8 @@ function playRoundHuman(e){
 
 // we get the divs what are clicked
 function loadTiles(){
-    const tiles = document.querySelectorAll('.tile');
     
+    const tiles = document.querySelectorAll('.tile');
     
     tiles.forEach(tile=> {
         tile.addEventListener('click', e => {
