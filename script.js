@@ -14,9 +14,10 @@ const GameBoard = (function(){
 
     // clears the board and resets the game
     const clear = () => {
-        
-        const tiles = document.querySelectorAll('.tile');
 
+        const window = document.querySelector('.congrats');
+        const tiles = document.querySelectorAll('.tile');
+        window.style.display = 'none';
         for(let i = 0; i<tiles.length; i++){
             tiles[i].remove()
         };
@@ -107,14 +108,10 @@ function mixmax(){
     // human
     var huPlayer;
     var aiPlayer;
-    if(GameBoard.switchPlayer){
-        huPlayer = "O";
-        aiPlayer = "X";
-        
-    } else {
-        huPlayer = "X";
-        aiPlayer = "O";
-    }
+    
+    huPlayer = "X";
+    aiPlayer = "O";
+    
     
     // ai
     
@@ -250,6 +247,19 @@ function mixmax(){
 
 
 // Initializing players
+const option = document.querySelector('.against');
+option.addEventListener('click', (e)=> {
+    if(option.innerHTML === 'bot'){
+        const player1 = Player("X", 'human')
+        const player2 = Player("O", 'bot')
+        option.textContent = 'human'
+    } else {
+        const player1 = Player("X", 'human')
+        const player2 = Player("O", 'human')
+        option.textContent = 'bot'
+    }
+    
+})
 const player1 = Player("X", 'human')
 const player2 = Player("O", 'bot')
 let activePlayer = player1;
@@ -315,27 +325,36 @@ const Game = (function(){
     //check the current status of board and then give feedback if the game is over
     function checkStatus(){
         let status = GameBoard.CheckWin()
-        
+        const window = document.querySelector('.congrats');
+        const message = document.querySelector('.message');
         // console.log(status)
         if (status === undefined){
             
         } else {
+            
             if (status[0] === 'draw'){
-                console.log('Game over, its a draw!');
+                window.style.display = "block";
+                message.textContent = 'Game over, its a draw!'
+                console.log();
                 Game.isRunning = false;
+                Game.colorWin();
 
     
             } else if(status[0] === player1.side) {
-                console.log('Game over, player1 won!');
+                window.style.display = "block";
+                message.textContent = 'Game over, player1 won!'
+                console.log();
                 Game.isRunning = false;
+                Game.colorWin();
     
             } else if(status[0] === player2.side) {
+                window.style.display = "block";
+                message.textContent = 'Game over, player2 won!'
                 console.log('Game over, player2 won!');
                 Game.isRunning = false;
-            };
-            if (!Game.isRunning){
                 Game.colorWin();
-            }
+            };
+            
         }
     };
 
@@ -346,54 +365,42 @@ const Game = (function(){
 
 Game.renderBoard()
 
-function playRound(e){
+function playRoundBot(e){
     
     let col = parseInt(Array(e.target.id.split(" "))[0][0])
     let row = parseInt(Array(e.target.id.split(" "))[0][1])
     
-    if(GameBoard.switchPlayer){
-        if(!isNaN(row) && Game.isRunning){
-            activePlayer = player2
-            GameBoard.modify(activePlayer.side, col, row)
-            Game.renderNew(col, row)
-            Game.checkStatus()
-            
-            activePlayer = player1
-            
-        if(Game.isRunning){
-            col = mixmax()[0];
-            row = mixmax()[1];
-            GameBoard.modify(activePlayer.side, col, row)
-            
-            Game.renderNew(col, row)
-            Game.checkStatus()
-            
-            activePlayer = player2;
-        }
-    }
-    } else {
-        if(!isNaN(row) && Game.isRunning){
-            activePlayer = player1
-            GameBoard.modify(activePlayer.side, col, row)
-            Game.renderNew(col, row)
-            Game.checkStatus()
-            
-            activePlayer = player2
-        if(Game.isRunning){
-            col = mixmax()[0];
-            row = mixmax()[1];
-            GameBoard.modify(activePlayer.side, col, row)
-            
-            Game.renderNew(col, row)
-            Game.checkStatus()
-            
-            activePlayer = player1;
+    
+    if(!isNaN(row) && Game.isRunning){
+        activePlayer = player1
+        GameBoard.modify(activePlayer.side, col, row)
+        Game.renderNew(col, row)
+        Game.checkStatus()
+        
+        activePlayer = player2
+    if(Game.isRunning){
+        col = mixmax()[0];
+        row = mixmax()[1];
+        GameBoard.modify(activePlayer.side, col, row)
+        
+        Game.renderNew(col, row)
+        Game.checkStatus()
+        
+        activePlayer = player1;
         } 
     }
-    }
-
     
 };
+
+function playRoundHuman(e){
+    let col = parseInt(Array(e.target.id.split(" "))[0][0])
+    let row = parseInt(Array(e.target.id.split(" "))[0][1])
+
+    GameBoard.modify(activePlayer.side, col, row)
+    Game.renderNew(col, row)
+    Game.checkStatus()
+    activePlayer = activePlayer.side==='X'? activePlayer=player2: activePlayer=player1;
+}
 
 // we get the divs what are clicked
 function loadTiles(){
@@ -401,7 +408,14 @@ function loadTiles(){
     
     
     tiles.forEach(tile=> {
-        tile.addEventListener('click', e => playRound(e));
+        tile.addEventListener('click', e => {
+            if(option.textContent==='bot'){
+                playRoundBot(e);
+            } else {
+                playRoundHuman(e);
+            }
+            
+        });
     })
 };
 
