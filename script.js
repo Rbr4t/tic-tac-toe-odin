@@ -7,58 +7,58 @@ const GameBoard = (function(){
                  [null, null, null],
                  [null, null, null]
                 ];
-
+    let switchPlayer = false;
     const showBoard = () => console.log(board);
     
-    const modify = (XO, col, row) => board[col][row]= XO;
+    const modify = (XO, col, row) => GameBoard.board[col][row]= XO;
 
     // clears the board and resets the game
     const clear = () => {
-        console.log("")
-        GameBoard.board = [
-            [null, null, null],
-            [null, null, null],
-            [null, null, null]
-        ];
         
         const tiles = document.querySelectorAll('.tile');
 
         for(let i = 0; i<tiles.length; i++){
             tiles[i].remove()
         };
-        
+        GameBoard.board = [
+            [null, null, null],
+            [null, null, null],
+            [null, null, null]
+        ];
+        GameBoard.switchPlayer = GameBoard.switchPlayer===true?GameBoard.switchPlayer= false: GameBoard.switchPlayer = true
         Game.renderBoard();
         loadTiles();
         Game.isRunning = true;
+        
     };
     
     const CheckWin = () => {
         
         //scenario no 1, rows
-        for(let i=0; i<board.length; i++) {
-            let row = board[i];
+        for(let i=0; i<GameBoard.board.length; i++) {
+            let row = GameBoard.board[i];
             if (row[0] === row[1] && row[0] === row[2] && row[0] !== null){
                 return [row[0], i, 'row']; 
             } 
         };
 
         // Scenario no 2, columns
-        for(let i=0; i<board.length; i++){
-            if (board[0][i]===board[1][i] && board[0][i]===board[2][i] && board[0][i]!==null){
-                return [board[0][i], i, 'col'];
+        for(let i=0; i<GameBoard.board.length; i++){
+            if (GameBoard.board[0][i]===GameBoard.board[1][i] && GameBoard.board[0][i]===GameBoard.board[2][i] && GameBoard.board[0][i]!==null){
+                return [GameBoard.board[0][i], i, 'col'];
             }
         }
 
         // Scenario no 3, diagonals
-        if (board[1][1] === board[0][0] &&  board[0][0]=== board[2][2] && board[1][1]!==null ){
-            return [board[0][0], 1, 'dia'];
-        } else if (board[1][1]=== board[0][2] && board[0][2] === board[2][0] && board[1][1]!==null){
-            return [board[0][2], -1, 'dia'];
+        if (GameBoard.board[1][1] === GameBoard.board[0][0] &&  GameBoard.board[0][0]=== GameBoard.board[2][2] && GameBoard.board[1][1]!==null ){
+            return [GameBoard.board[0][0], 1, 'dia'];
+        } else if (GameBoard.board[1][1]=== GameBoard.board[0][2] && GameBoard.board[0][2] === GameBoard.board[2][0] && GameBoard.board[1][1]!==null){
+            return [GameBoard.board[0][2], -1, 'dia'];
         }
 
         // Scenario no 4, draw
         let draw = []
-        board.forEach(r => {
+        GameBoard.board.forEach(r => {
             if (!r.includes(null)){
                 draw.push(true);
             }
@@ -66,10 +66,12 @@ const GameBoard = (function(){
         if (draw.length===3){
             return ['draw', null];
         };
+
+        return undefined;
         
         
     }
-    return {showBoard, board, modify, CheckWin, clear}
+    return {showBoard, board, modify, CheckWin, clear, switchPlayer}
 })();
 
 
@@ -84,7 +86,6 @@ const Player = (XO, type1) => {
 function normalizeArrayForMiniMax(){
     let newArr = [];
     let index = 0;
-    // console.log(GameBoard.board)
     for(let i=0; i<3; i++){
         for(let j=0; j<3; j++){
             if(GameBoard.board[i][j] !== null){
@@ -104,13 +105,22 @@ function mixmax(){
     // did some modifications in order to use this piece of code(normalizeArrayForMiniMax && index output), https://github.com/ahmadabdolsaheb/minimaxarticle/blob/master/index.js
 
     // human
-    var huPlayer = "X";
+    var huPlayer;
+    var aiPlayer;
+    if(GameBoard.switchPlayer){
+        huPlayer = "O";
+        aiPlayer = "X";
+        
+    } else {
+        huPlayer = "X";
+        aiPlayer = "O";
+    }
+    
     // ai
-    var aiPlayer = "O";
-
+    
     // this is the board flattened and filled with some values to easier asses the Artificial Intelligence.
-    var origBoard = normalizeArrayForMiniMax();
-    // console.log(origBoard)
+    let origBoard = normalizeArrayForMiniMax();
+    // console.log(normalizeArrayForMiniMax())
     //keeps count of function calls
     var fc = 0;
 
@@ -118,6 +128,7 @@ function mixmax(){
     var bestSpot = minimax(origBoard, aiPlayer);
 
     //logging the results
+    // console.log(origBoard)
     // console.log("index: " + bestSpot.index);
     // console.log("function calls: " + fc);
 
@@ -145,6 +156,7 @@ function mixmax(){
 
         // loop through available spots
         for (var i = 0; i < availSpots.length; i++){
+            
             //create an object for each and store the index of that spot that was stored as a number in the object's index key
             var move = {};
             move.index = newBoard[availSpots[i]];
@@ -273,7 +285,7 @@ const Game = (function(){
     function colorWin(){
         let status = GameBoard.CheckWin();
         const tiles = document.querySelectorAll('.tile');
-        
+        // console.log(GameBoard.CheckWin())
         // rows
         let i = null
         if (status[2]==='row'){
@@ -304,7 +316,7 @@ const Game = (function(){
     function checkStatus(){
         let status = GameBoard.CheckWin()
         
-
+        // console.log(status)
         if (status === undefined){
             
         } else {
@@ -338,26 +350,49 @@ function playRound(e){
     
     let col = parseInt(Array(e.target.id.split(" "))[0][0])
     let row = parseInt(Array(e.target.id.split(" "))[0][1])
-
-    if(!isNaN(row) && Game.isRunning){
-          
-        GameBoard.modify(activePlayer.side, col, row)
-        Game.renderNew(col, row)
-        Game.checkStatus()
-        activePlayer = player2;
-    if(Game.isRunning){
-        col = mixmax()[0];
-        row = mixmax()[1];
-        GameBoard.modify("O", col, row)
-        
-        Game.renderNew(col, row)
-        Game.checkStatus()
-        // GameBoard.showBoard()
-        activePlayer = player1;
+    
+    if(GameBoard.switchPlayer){
+        if(!isNaN(row) && Game.isRunning){
+            activePlayer = player2
+            GameBoard.modify(activePlayer.side, col, row)
+            Game.renderNew(col, row)
+            Game.checkStatus()
+            
+            activePlayer = player1
+            
+        if(Game.isRunning){
+            col = mixmax()[0];
+            row = mixmax()[1];
+            GameBoard.modify(activePlayer.side, col, row)
+            
+            Game.renderNew(col, row)
+            Game.checkStatus()
+            
+            activePlayer = player2;
+        }
     }
-        
+    } else {
+        if(!isNaN(row) && Game.isRunning){
+            activePlayer = player1
+            GameBoard.modify(activePlayer.side, col, row)
+            Game.renderNew(col, row)
+            Game.checkStatus()
+            
+            activePlayer = player2
+        if(Game.isRunning){
+            col = mixmax()[0];
+            row = mixmax()[1];
+            GameBoard.modify(activePlayer.side, col, row)
+            
+            Game.renderNew(col, row)
+            Game.checkStatus()
+            
+            activePlayer = player1;
+        } 
+    }
+    }
 
-    } 
+    
 };
 
 // we get the divs what are clicked
